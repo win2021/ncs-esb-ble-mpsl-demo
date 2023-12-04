@@ -18,28 +18,14 @@ MODIFIED SAMPLE TO INCLUDE EXTENSIONS ++
 #include <zephyr/drivers/gpio.h> 
 
 #include <dk_buttons_and_leds.h>
-#include "app_bt_lbs.h"
-#include "app_timeslot.h"
+
+#ifdef CONFIG_BOARD_NRF5340DK_NRF5340_CPUNET
+#include "hci_rpmsg_module.h"
+#endif
+
 #include "app_esb.h"
 
 LOG_MODULE_REGISTER(main, LOG_LEVEL_INF);
-
-#define TIMESLOT_LED DK_LED4
-
-/* Callback function signalling that a timeslot is started or stopped */
-void on_timeslot_start_stop(timeslot_callback_type_t type)
-{
-	switch (type) {
-		case APP_TS_STARTED:
-			dk_set_led_off(TIMESLOT_LED);
-			app_esb_resume();
-			break;
-		case APP_TS_STOPPED:
-			dk_set_led_on(TIMESLOT_LED);
-			app_esb_suspend();
-			break;
-	}
-}
 
 void on_esb_callback(app_esb_event_t *event)
 {
@@ -59,35 +45,33 @@ void on_esb_callback(app_esb_event_t *event)
 	}
 }
 
-void main(void)
+int main(void)
 {
 	int err;
 
-	err = dk_leds_init();
-	if (err) {
-		LOG_ERR("LEDs init failed (err %d)", err);
-		return;
-	}
-
 	LOG_INF("ESB BLE Multiprotocol Example");
 
-	err = app_bt_init();
-	if (err) {
-		LOG_ERR("app_bt init failed (err %d)", err);
-		return;
-	}
+#ifdef CONFIG_BOARD_NRF5340DK_NRF5340_CPUNET
+	// Initialize the hci_rpmsg module, which handles the interface between the Bluetooth host and the controller
+	hci_rpmsg_init();
 
+	LOG_WRN("Change ESB_EVT_IRQ and ESB_EVT_IRQHandler in esb_peripherals.h to use SWI3 instead of SWI0!");
+	k_msleep(5000);
+#endif
+
+	// Initialize the app_esb module, which handles timeslot and ESB configuration
 	err = app_esb_init(APP_ESB_MODE_PTX, on_esb_callback);
 	if (err) {
 		LOG_ERR("app_esb init failed (err %d)", err);
-		return;
+		return err;
 	}
-	
-	timeslot_init(on_timeslot_start_stop);
+	LOG_INF("ESB in timeslot started");
 
 	uint8_t esb_tx_buf[8] = {0};
 	int tx_counter = 0;
+
 	while (1) {
+#ifndef CONFIG_BOARD_NRF5340DK_NRF5340_CPUNET
 		memcpy(esb_tx_buf, (uint8_t*)&tx_counter, 4);
 		err = app_esb_send(esb_tx_buf, 8);
 		if (err < 0) {
@@ -97,6 +81,7 @@ void main(void)
 			LOG_INF("ESB TX upload %.2x-%.2x", (tx_counter& 0xFF), ((tx_counter >> 8) & 0xFF));
 			tx_counter++;
 		}
+#endif
 		k_sleep(K_MSEC(100));
 	}
 }
