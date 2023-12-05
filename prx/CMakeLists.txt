@@ -14,7 +14,6 @@ endif()
 
 target_sources(app PRIVATE
   src/main.c
-#  ../common/app_bt_lbs.c
   ../common/timeslot_handler.c
   ../common/app_esb.c
 )

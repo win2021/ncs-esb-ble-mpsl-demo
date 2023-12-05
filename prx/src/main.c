@@ -17,6 +17,7 @@ MODIFIED SAMPLE TO INCLUDE EXTENSIONS ++
 
 #include <zephyr/drivers/gpio.h> 
 
+#include <dk_buttons_and_leds.h>
 #include "hci_rpmsg_module.h"
 #include "app_esb.h"
 
@@ -51,7 +52,7 @@ int main(void)
 {
 	int err;
 
-	LOG_INF("ESB PRX BLE Multiprotocol Example");
+	LOG_INF("ESB BLE Multiprotocol Example");
 
 	/*err = app_bt_init();
 	if (err) {

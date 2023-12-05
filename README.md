@@ -10,4 +10,6 @@ Requirements
 ************
 
 - nRF Connect SDK v2.5.0
-- nRF52 series development kit
+- nRF5340 development kit
+- ptx and prx build for nrf5340 netcore, the peripheral_lbs_app build for nrf5340 app core.
+- A conflict between the ESB library and MPSL, since they are both configured to use the SWI0 interrupt in the nRF5340. In order to fix this it is necessary to change esb_peripherals.h, and modify the SW0 to SW3. 

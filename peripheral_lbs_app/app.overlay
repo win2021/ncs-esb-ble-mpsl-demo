@@ -1,0 +1,9 @@
+/{
+    gpio_fwd: nrf-gpio-forwarder {
+		compatible = "nordic,nrf-gpio-forwarder";
+		status = "okay";
+		leds {
+			gpios = <&gpio0 28 0>, <&gpio0 29 0>, <&gpio0 30 0>, <&gpio0 31 0>;
+		};
+	};
+};
